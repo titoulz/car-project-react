@@ -1,14 +1,16 @@
-import { carsData } from '../data/cars'; // Importe les données des voitures
-import CarCard from '../components/CarCard'; // Importe le composant carte voiture
+import { storageService } from '../services/storageService';
+import CarCard from '../components/CarCard';
 
-export default function Catalogue() { // Définit le composant page Catalogue
-    return ( // Retourne le JSX de la page
-        <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors duration-300"> {/* Conteneur principal */}
-            <div className="container mx-auto px-6"> {/* Conteneur centré */}
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8 text-center">Notre Catalogue</h1> {/* Titre de la page */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"> {/* Grille responsive pour les cartes */}
-                    {carsData.map(car => ( // Boucle sur chaque voiture pour créer une carte
-                        <CarCard key={car.id} car={car} /> // Affiche le composant CarCard
+export default function Catalogue() {
+    const cars = storageService.getCars();
+
+    return (
+        <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+            <div className="container mx-auto px-6">
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8 text-center">Notre Catalogue</h1>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {cars.map(car => (
+                        <CarCard key={car.id} car={car} />
                     ))}
                 </div>
             </div>

@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom'; // Importe Link pour la navigation
-import { carsData } from '../data/cars'; // Importe les données des voitures
-import CarCard from '../components/CarCard'; // Importe le composant carte voiture
+import { Link } from 'react-router-dom';
+import { storageService } from '../services/storageService';
+import CarCard from '../components/CarCard';
 
-export default function Home() { // Définit le composant page d'accueil
-    const featuredCars = carsData.slice(0, 3); // Sélectionne les 3 premières voitures pour la section vedette
+export default function Home() {
+    const cars = storageService.getCars();
+    const featuredCars = cars.slice(0, 3);
 
     return ( // Retourne le JSX de la page d'accueil
         <div className="min-h-screen bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300"> {/* Conteneur principal */}

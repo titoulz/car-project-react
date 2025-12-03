@@ -4,6 +4,8 @@ import Home from '../pages/Home';
 import Catalogue from '../pages/Catalogue';
 import CarDetail from '../pages/CarDetail';
 import Login from '../pages/Login';
+import AddCar from '../pages/AddCar';
+import MyReservations from '../pages/MyReservations';
 
 export const router = createBrowserRouter([
     {
@@ -25,6 +27,14 @@ export const router = createBrowserRouter([
             {
                 path: '/login',
                 element: <Login />,
+            },
+            {
+                path: '/add-car',
+                element: <AddCar />,
+            },
+            {
+                path: '/my-reservations',
+                element: <MyReservations />,
             },
             {
                 path: '*',

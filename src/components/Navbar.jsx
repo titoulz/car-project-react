@@ -28,7 +28,9 @@ export default function Navbar() { // Définit le composant Navbar
                 </Link>
                 <div className="hidden md:flex items-center space-x-8"> {/* Menu de navigation (caché sur mobile) */}
                     <Link to="/" className="text-turismo-navy font-medium hover:text-turismo-gold transition dark:text-white dark:hover:text-turismo-gold">Accueil</Link> {/* Lien Accueil */}
-                    <Link to="/cars" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Catalogue</Link> {/* Lien Catalogue */}
+                    <Link to="/cars" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Catalogue</Link>
+                    <Link to="/add-car" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Ajouter</Link>
+                    <Link to="/my-reservations" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Mes Réservations</Link> {/* Lien Catalogue */}
                     <Link to="/login" className="px-6 py-2 rounded-full border border-turismo-navy text-turismo-navy hover:bg-turismo-navy hover:text-white transition duration-300 dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-turismo-navy">Connexion</Link> {/* Bouton Connexion */}
                     <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition text-turismo-navy dark:text-white cursor-pointer"> {/* Bouton toggle mode sombre */}
                         {darkMode ? ( // Si mode sombre
