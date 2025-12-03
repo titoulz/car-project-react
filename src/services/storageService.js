@@ -55,13 +55,25 @@ export const storageService = {
         return newCar;
     },
 
+    // Delete a car
+    deleteCar(id) {
+        const cars = this.getCars();
+        const updatedCars = cars.filter(c => c.id !== id);
+        localStorage.setItem(STORAGE_KEYS.CARS, JSON.stringify(updatedCars));
+        return updatedCars;
+    },
+
     // Add a reservation
     addReservation(reservation) {
         this.init();
         const reservations = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVATIONS));
+        const currentUser = this.getCurrentUser();
+
         const newReservation = {
             ...reservation,
             id: Date.now(),
+            userId: currentUser ? currentUser.id : null, // Associate with user
+            status: 'pending', // Default status: pending, confirmed, refused
             date: new Date().toISOString()
         };
         reservations.push(newReservation);
@@ -73,6 +85,18 @@ export const storageService = {
     getReservations() {
         this.init();
         return JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVATIONS));
+    },
+
+    // Update reservation status
+    updateReservationStatus(id, status) {
+        this.init();
+        const reservations = this.getReservations();
+        const index = reservations.findIndex(r => r.id === id);
+        if (index !== -1) {
+            reservations[index].status = status;
+            localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify(reservations));
+        }
+        return reservations;
     },
 
     // Remove a reservation

@@ -62,8 +62,9 @@ export default function Navbar() {
 
                     {user && user.role === 'admin' && (
                         <>
-                            <Link to="/add-car" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Ajouter</Link>
+                            <Link to="/add-car" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Gérer les véhicules</Link>
                             <Link to="/manage-users" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Utilisateurs</Link>
+                            <Link to="/admin/reservations" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Réservations</Link>
                         </>
                     )}
 
@@ -73,9 +74,14 @@ export default function Navbar() {
 
                     {user ? (
                         <div className="flex items-center gap-4">
-                            <span className="text-sm font-semibold text-turismo-navy dark:text-turismo-gold">
-                                {user.firstName} ({user.role})
-                            </span>
+                            <Link to="/my-account" className="flex items-center gap-2 hover:opacity-80 transition">
+                                <div className="w-8 h-8 rounded-full bg-turismo-navy text-white dark:bg-turismo-gold dark:text-gray-900 flex items-center justify-center font-bold text-sm">
+                                    {user.firstName.charAt(0)}
+                                </div>
+                                <span className="text-sm font-semibold text-turismo-navy dark:text-turismo-gold">
+                                    {user.firstName} ({user.role})
+                                </span>
+                            </Link>
                             <button
                                 onClick={handleLogout}
                                 className="px-6 py-2 rounded-full border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition duration-300"

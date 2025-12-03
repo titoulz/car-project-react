@@ -8,6 +8,8 @@ import AddCar from '../pages/AddCar';
 import MyReservations from '../pages/MyReservations';
 import Register from '../pages/Register';
 import ManageUsers from '../pages/ManageUsers';
+import AdminReservations from '../pages/AdminReservations';
+import MyAccount from '../pages/MyAccount';
 
 export const router = createBrowserRouter([
     {
@@ -27,10 +29,6 @@ export const router = createBrowserRouter([
                 element: <CarDetail />,
             },
             {
-                path: '/login',
-                element: <Login />,
-            },
-            {
                 path: '/add-car',
                 element: <AddCar />,
             },
@@ -39,12 +37,24 @@ export const router = createBrowserRouter([
                 element: <MyReservations />,
             },
             {
+                path: '/my-account',
+                element: <MyAccount />,
+            },
+            {
                 path: '/register',
                 element: <Register />,
             },
             {
                 path: '/manage-users',
                 element: <ManageUsers />,
+            },
+            {
+                path: '/admin/reservations',
+                element: <AdminReservations />,
+            },
+            {
+                path: '/login',
+                element: <Login />,
             },
             {
                 path: '*',

@@ -6,15 +6,28 @@ export default function MyReservations() {
     const [reservations, setReservations] = useState([]);
 
     useEffect(() => {
+        const currentUser = storageService.getCurrentUser();
         const storedReservations = storageService.getReservations();
-        // Sort by most recent
-        setReservations(storedReservations.reverse());
+
+        if (currentUser) {
+            // Filter reservations for the current user
+            // Note: Handle legacy reservations (without userId) by showing them if user is admin, or hiding them? 
+            // For now, let's assume we only show reservations that match the ID.
+            // If we want to be nice to existing data during dev, we might include ones with no userId if the user is the first one... 
+            // But let's stick to the request: "reservations associated to a user".
+            const userReservations = storedReservations.filter(r => r.userId === currentUser.id);
+            setReservations(userReservations.reverse());
+        }
     }, []);
 
     const handleCancelReservation = (id) => {
         if (window.confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
-            const updatedReservations = storageService.removeReservation(id);
-            setReservations(updatedReservations.reverse());
+            const updatedAllReservations = storageService.removeReservation(id);
+            const currentUser = storageService.getCurrentUser();
+            if (currentUser) {
+                const userReservations = updatedAllReservations.filter(r => r.userId === currentUser.id);
+                setReservations(userReservations.reverse());
+            }
         }
     };
 
@@ -38,8 +51,12 @@ export default function MyReservations() {
                             <div key={reservation.id} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-6 animate-fade-in-up">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold dark:bg-green-900/30 dark:text-green-400">
-                                            Confirmée
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold 
+                                            ${reservation.status === 'confirmed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                reservation.status === 'refused' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
+                                            {reservation.status === 'confirmed' ? 'Confirmée' :
+                                                reservation.status === 'refused' ? 'Refusée' : 'En attente'}
                                         </span>
                                         <span className="text-sm text-gray-400">
                                             Réservé le {new Date(reservation.date).toLocaleDateString()}
