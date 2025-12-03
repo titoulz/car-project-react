@@ -11,6 +11,13 @@ export default function MyReservations() {
         setReservations(storedReservations.reverse());
     }, []);
 
+    const handleCancelReservation = (id) => {
+        if (window.confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
+            const updatedReservations = storageService.removeReservation(id);
+            setReservations(updatedReservations.reverse());
+        }
+    };
+
     return (
         <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
             <div className="container mx-auto px-6">
@@ -60,7 +67,10 @@ export default function MyReservations() {
                                     <div className="text-2xl font-bold text-turismo-navy dark:text-turismo-gold">
                                         {reservation.price}
                                     </div>
-                                    <button className="mt-4 text-sm text-red-500 hover:text-red-600 font-medium underline decoration-transparent hover:decoration-red-500 transition-all">
+                                    <button
+                                        onClick={() => handleCancelReservation(reservation.id)}
+                                        className="mt-4 text-sm text-red-500 hover:text-red-600 font-medium underline decoration-transparent hover:decoration-red-500 transition-all"
+                                    >
                                         Annuler la réservation
                                     </button>
                                 </div>

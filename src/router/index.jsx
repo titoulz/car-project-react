@@ -6,6 +6,8 @@ import CarDetail from '../pages/CarDetail';
 import Login from '../pages/Login';
 import AddCar from '../pages/AddCar';
 import MyReservations from '../pages/MyReservations';
+import Register from '../pages/Register';
+import ManageUsers from '../pages/ManageUsers';
 
 export const router = createBrowserRouter([
     {
@@ -35,6 +37,14 @@ export const router = createBrowserRouter([
             {
                 path: '/my-reservations',
                 element: <MyReservations />,
+            },
+            {
+                path: '/register',
+                element: <Register />,
+            },
+            {
+                path: '/manage-users',
+                element: <ManageUsers />,
             },
             {
                 path: '*',

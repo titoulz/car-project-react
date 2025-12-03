@@ -18,7 +18,32 @@ export default function CarDetail() {
     // Données fictives pour le calendrier (ajouté pour la démo)
     const currentMonth = "Décembre 2025";
     const daysInMonth = 31;
-    const reservedDays = [5, 6, 12, 13, 14, 20, 21, 25, 26];
+    const [reservedDays, setReservedDays] = useState([]);
+
+    useEffect(() => {
+        const loadReservations = () => {
+            const allReservations = storageService.getReservations();
+            // Filter reservations for this car
+            const carReservations = allReservations.filter(r => r.carId === parseInt(id));
+
+            // Extract all reserved days
+            const days = carReservations.flatMap(r => {
+                if (!r.dates) return [];
+                return r.dates.map(dateStr => {
+                    // Extract day number from string like "5 Décembre 2025"
+                    const match = dateStr.match(/^(\d+)/);
+                    return match ? parseInt(match[1]) : null;
+                }).filter(d => d !== null);
+            });
+
+            setReservedDays(days);
+        };
+
+        loadReservations();
+        // Add event listener to update when storage changes (e.g. another user reserves)
+        window.addEventListener('storage', loadReservations);
+        return () => window.removeEventListener('storage', loadReservations);
+    }, [id]);
 
     const toggleDate = (day) => {
         if (reservedDays.includes(day)) return;
@@ -31,6 +56,8 @@ export default function CarDetail() {
             }
         });
     };
+
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const handleReservation = () => {
         if (!car) return;
@@ -47,8 +74,7 @@ export default function CarDetail() {
         };
 
         storageService.addReservation(reservation);
-        alert(`Félicitations ! Vous avez réservé la ${car.name} pour les dates : ${selectedDates.join(', ')} Décembre.`);
-        navigate('/');
+        setShowSuccessModal(true);
     };
 
     if (!car) {
@@ -56,7 +82,40 @@ export default function CarDetail() {
     }
 
     return (
-        <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors duration-300 animate-zoom-in-up">
+        <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors duration-300 animate-zoom-in-up relative">
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => navigate('/')}></div>
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-md w-full shadow-2xl relative z-10 animate-fade-in-up border border-gray-100 dark:border-gray-700 text-center">
+                        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Réservation Confirmée !</h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            Félicitations ! Vous avez réservé la <span className="font-bold text-turismo-navy dark:text-turismo-gold">{car.name}</span> pour les dates : <br />
+                            <span className="font-semibold">{selectedDates.join(', ')} Décembre</span>.
+                        </p>
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => navigate('/my-reservations')}
+                                className="w-full py-3 rounded-xl bg-turismo-navy text-white font-bold hover:bg-turismo-navy/90 transition shadow-lg dark:bg-white dark:text-turismo-navy"
+                            >
+                                Voir mes réservations
+                            </button>
+                            <button
+                                onClick={() => navigate('/')}
+                                className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                            >
+                                Retour à l'accueil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="container mx-auto px-6">
                 <Link to="/cars" className="inline-flex items-center gap-2 text-turismo-navy dark:text-turismo-gold mb-8 hover:underline">
                     ← Retour au catalogue
@@ -176,17 +235,23 @@ export default function CarDetail() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleReservation}
-                                disabled={selectedDates.length === 0}
-                                className={`w-full py-4 rounded-xl font-bold text-lg transition shadow-lg 
-                                    ${selectedDates.length > 0
-                                        ? 'bg-turismo-navy text-white hover:bg-turismo-navy/90 shadow-turismo-navy/30 dark:bg-white dark:text-turismo-navy dark:hover:bg-gray-100'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-                                    }`}
-                            >
-                                {selectedDates.length > 0 ? 'Réserver ces dates' : 'Sélectionnez des dates'}
-                            </button>
+                            {storageService.getCurrentUser() ? (
+                                <button
+                                    onClick={handleReservation}
+                                    disabled={selectedDates.length === 0}
+                                    className={`w-full py-4 rounded-xl font-bold text-lg transition shadow-lg 
+                                        ${selectedDates.length > 0
+                                            ? 'bg-turismo-navy text-white hover:bg-turismo-navy/90 shadow-turismo-navy/30 dark:bg-white dark:text-turismo-navy dark:hover:bg-gray-100'
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
+                                        }`}
+                                >
+                                    {selectedDates.length > 0 ? 'Réserver ces dates' : 'Sélectionnez des dates'}
+                                </button>
+                            ) : (
+                                <Link to="/login" className="block w-full py-4 rounded-xl bg-turismo-navy text-white font-bold text-lg hover:bg-turismo-navy/90 transition shadow-lg shadow-turismo-navy/30 dark:bg-white dark:text-turismo-navy dark:hover:bg-gray-100 text-center">
+                                    Se connecter pour réserver
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

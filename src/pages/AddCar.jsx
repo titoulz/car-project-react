@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { storageService } from '../services/storageService';
 import Navbar from '../components/Navbar';
 
 const AddCar = () => {
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const user = storageService.getCurrentUser();
+        if (!user || user.role !== 'admin') {
+            alert("Accès refusé. Réservé aux administrateurs.");
+            navigate('/');
+        }
+    }, [navigate]);
+
     const [formData, setFormData] = useState({
         name: '',
         category: '',
@@ -39,15 +48,15 @@ const AddCar = () => {
         <div className="min-h-screen bg-neutral-900 text-white">
             <Navbar />
             <div className="container mx-auto px-4 py-8 pt-24">
-                <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-turismo-navy to-turismo-gold bg-clip-text text-transparent animate-fade-in-up">
                     Ajouter une nouvelle voiture
                 </h1>
 
-                <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-neutral-800 p-8 rounded-xl shadow-2xl border border-neutral-700">
+                <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-neutral-800 p-8 rounded-xl shadow-2xl border border-neutral-700 animate-fade-in-up">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Basic Info */}
                         <div className="space-y-4">
-                            <h3 className="text-xl font-semibold text-blue-400">Informations Générales</h3>
+                            <h3 className="text-xl font-semibold text-turismo-gold">Informations Générales</h3>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Nom du modèle</label>
@@ -113,7 +122,7 @@ const AddCar = () => {
 
                         {/* Specs */}
                         <div className="space-y-4">
-                            <h3 className="text-xl font-semibold text-purple-400">Caractéristiques</h3>
+                            <h3 className="text-xl font-semibold text-turismo-gold">Caractéristiques</h3>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Puissance</label>
@@ -181,7 +190,7 @@ const AddCar = () => {
 
                     <button
                         type="submit"
-                        className="w-full mt-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                        className="w-full mt-8 bg-gradient-to-r from-turismo-navy to-turismo-gold hover:from-turismo-navy/90 hover:to-turismo-gold/90 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                     >
                         Ajouter la voiture
                     </button>
