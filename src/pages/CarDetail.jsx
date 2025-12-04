@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { storageService } from '../services/storageService';
 
 export default function CarDetail() {
     const { id } = useParams();
-    const navigate = useNavigate();
     const [car, setCar] = useState(null);
 
     useEffect(() => {
@@ -13,68 +12,15 @@ export default function CarDetail() {
         setCar(fetchedCar);
     }, [id]);
 
-    const [selectedDates, setSelectedDates] = useState([]);
-
-    // Données fictives pour le calendrier (ajouté pour la démo)
-    const currentMonth = "Décembre 2025";
-    const daysInMonth = 31;
-    const [reservedDays, setReservedDays] = useState([]);
-
-    useEffect(() => {
-        const loadReservations = () => {
-            const allReservations = storageService.getReservations();
-            // Filter reservations for this car
-            const carReservations = allReservations.filter(r => r.carId === parseInt(id));
-
-            // Extract all reserved days
-            const days = carReservations.flatMap(r => {
-                if (!r.dates) return [];
-                return r.dates.map(dateStr => {
-                    // Extract day number from string like "5 Décembre 2025"
-                    const match = dateStr.match(/^(\d+)/);
-                    return match ? parseInt(match[1]) : null;
-                }).filter(d => d !== null);
-            });
-
-            setReservedDays(days);
-        };
-
-        loadReservations();
-        // Add event listener to update when storage changes (e.g. another user reserves)
-        window.addEventListener('storage', loadReservations);
-        return () => window.removeEventListener('storage', loadReservations);
-    }, [id]);
-
-    const toggleDate = (day) => {
-        if (reservedDays.includes(day)) return;
-
-        setSelectedDates(prev => {
-            if (prev.includes(day)) {
-                return prev.filter(d => d !== day);
-            } else {
-                return [...prev, day].sort((a, b) => a - b);
-            }
-        });
-    };
-
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-
     const handleReservation = () => {
-        if (!car) return;
-        if (selectedDates.length === 0) {
-            alert('Veuillez sélectionner au moins une date.');
-            return;
+        if (window.confirm(`Voulez-vous réserver la ${car.name} ?`)) {
+            storageService.addReservation({
+                carId: car.id,
+                carName: car.name,
+                price: car.price
+            });
+            alert('Réservation effectuée avec succès !');
         }
-
-        const reservation = {
-            carId: car.id,
-            carName: car.name,
-            price: car.price,
-            dates: selectedDates.map(d => `${d} Décembre 2025`)
-        };
-
-        storageService.addReservation(reservation);
-        setShowSuccessModal(true);
     };
 
     if (!car) {
@@ -82,176 +28,70 @@ export default function CarDetail() {
     }
 
     return (
-        <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors duration-300 animate-zoom-in-up relative">
-            {/* Success Modal */}
-            {showSuccessModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => navigate('/')}></div>
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-md w-full shadow-2xl relative z-10 animate-fade-in-up border border-gray-100 dark:border-gray-700 text-center">
-                        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Réservation Confirmée !</h3>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                            Félicitations ! Vous avez réservé la <span className="font-bold text-turismo-navy dark:text-turismo-gold">{car.name}</span> pour les dates : <br />
-                            <span className="font-semibold">{selectedDates.join(', ')} Décembre</span>.
-                        </p>
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => navigate('/my-reservations')}
-                                className="w-full py-3 rounded-xl bg-turismo-navy text-white font-bold hover:bg-turismo-navy/90 transition shadow-lg dark:bg-white dark:text-turismo-navy"
-                            >
-                                Voir mes réservations
-                            </button>
-                            <button
-                                onClick={() => navigate('/')}
-                                className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                            >
-                                Retour à l'accueil
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
+        <div className="min-h-screen pt-24 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
             <div className="container mx-auto px-6">
-                <Link to="/cars" className="inline-flex items-center gap-2 text-turismo-navy dark:text-turismo-gold mb-8 hover:underline">
+                <Link to="/cars" className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-8 hover:underline">
                     ← Retour au catalogue
                 </Link>
 
-                <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl">
+                <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg">
                     <div className="grid grid-cols-1 lg:grid-cols-2">
-                        <div className="bg-gray-100 dark:bg-gray-700 p-8 flex items-start justify-center">
-                            <div className="sticky top-32 w-full flex justify-center">
-                                <img src={car.image} alt={car.name} className="w-full max-w-xl object-contain drop-shadow-2xl" />
-                            </div>
+                        <div className="bg-gray-100 dark:bg-gray-700 p-8 flex items-center justify-center">
+                            <img src={car.image} alt={car.name} className="w-full max-w-lg object-contain" />
                         </div>
 
                         <div className="p-8 lg:p-12">
-                            <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
+                            <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <span className="inline-block px-3 py-1 rounded-full bg-turismo-navy/10 text-turismo-navy dark:bg-turismo-gold/20 dark:text-turismo-gold text-sm font-semibold mb-2">
+                                    <span className="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-semibold mb-2">
                                         {car.category}
                                     </span>
-                                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white">{car.name}</h1>
+                                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{car.name}</h1>
                                 </div>
-                                <div className="text-right flex flex-col items-end">
-                                    <div className="text-3xl font-bold text-turismo-navy dark:text-turismo-gold">{car.price}</div>
-                                    <div className="text-gray-500 dark:text-gray-400 mb-2">{car.priceUnit}</div>
-                                    <span className="inline-block bg-green-100 text-green-700 text-sm px-3 py-1.5 rounded-lg font-bold dark:bg-green-900/30 dark:text-green-400 shadow-sm">
-                                        250€ économisés grâce à 3T
-                                    </span>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{car.price}</div>
+                                    <div className="text-gray-500 dark:text-gray-400">{car.priceUnit}</div>
                                 </div>
                             </div>
 
-                            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed mb-8">
+                            <p className="text-gray-600 dark:text-gray-300 text-lg mb-8">
                                 {car.description}
                             </p>
 
-                            <div className="grid grid-cols-2 gap-6 mb-8">
-                                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
-                                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Puissance</div>
-                                    <div className="text-lg font-semibold text-gray-900 dark:text-white">{car.specs.power}</div>
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Puissance</div>
+                                    <div className="font-semibold dark:text-white">{car.specs.power}</div>
                                 </div>
-                                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
-                                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">0-100 km/h</div>
-                                    <div className="text-lg font-semibold text-gray-900 dark:text-white">{car.specs.acceleration}</div>
+                                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">0-100 km/h</div>
+                                    <div className="font-semibold dark:text-white">{car.specs.acceleration}</div>
                                 </div>
-                                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
-                                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Transmission</div>
-                                    <div className="text-lg font-semibold text-gray-900 dark:text-white">{car.specs.transmission}</div>
+                                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Transmission</div>
+                                    <div className="font-semibold dark:text-white">{car.specs.transmission}</div>
                                 </div>
-                                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50">
-                                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Carburant</div>
-                                    <div className="text-lg font-semibold text-gray-900 dark:text-white">{car.specs.fuel}</div>
+                                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Carburant</div>
+                                    <div className="font-semibold dark:text-white">{car.specs.fuel}</div>
                                 </div>
                             </div>
 
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Équipements</h3>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                            <ul className="grid grid-cols-2 gap-2 mb-8">
                                 {car.features.map((feature, index) => (
                                     <li key={index} className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                                        <svg className="w-5 h-5 text-turismo-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        {feature}
+                                        • {feature}
                                     </li>
                                 ))}
                             </ul>
 
-                            {/* Section Calendrier de disponibilité */}
-                            <div className="mb-8">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Disponibilités</h3>
-                                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                                    <div className="text-center font-semibold mb-4 text-turismo-navy dark:text-white">{currentMonth}</div>
-
-                                    <div className="grid grid-cols-7 gap-2 text-center text-sm mb-2">
-                                        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(day => (
-                                            <div key={day} className="text-gray-400 font-medium">{day}</div>
-                                        ))}
-                                    </div>
-
-                                    <div className="grid grid-cols-7 gap-2 text-center text-sm">
-                                        {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
-                                            const isReserved = reservedDays.includes(day);
-                                            const isSelected = selectedDates.includes(day);
-
-                                            return (
-                                                <div
-                                                    key={day}
-                                                    onClick={() => toggleDate(day)}
-                                                    className={`
-                                                        py-2 rounded-lg transition-colors duration-200
-                                                        ${isReserved
-                                                            ? 'bg-red-50 text-red-400 dark:bg-red-900/20 dark:text-red-400 cursor-not-allowed'
-                                                            : isSelected
-                                                                ? 'bg-turismo-gold text-white shadow-md transform scale-105 cursor-pointer'
-                                                                : 'hover:bg-turismo-navy hover:text-white dark:hover:bg-turismo-gold dark:hover:text-gray-900 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 cursor-pointer'
-                                                        }
-                                                    `}
-                                                >
-                                                    {day}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-
-                                    <div className="flex gap-6 mt-6 text-sm justify-center border-t border-gray-100 dark:border-gray-700 pt-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                                            <span className="text-gray-600 dark:text-gray-400">Disponible</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-turismo-gold"></div>
-                                            <span className="text-gray-600 dark:text-gray-400">Sélectionné</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-red-100 dark:bg-red-900/20"></div>
-                                            <span className="text-gray-600 dark:text-gray-400">Réservé</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {storageService.getCurrentUser() ? (
-                                <button
-                                    onClick={handleReservation}
-                                    disabled={selectedDates.length === 0}
-                                    className={`w-full py-4 rounded-xl font-bold text-lg transition shadow-lg 
-                                        ${selectedDates.length > 0
-                                            ? 'bg-turismo-navy text-white hover:bg-turismo-navy/90 shadow-turismo-navy/30 dark:bg-white dark:text-turismo-navy dark:hover:bg-gray-100'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-                                        }`}
-                                >
-                                    {selectedDates.length > 0 ? 'Réserver ces dates' : 'Sélectionnez des dates'}
-                                </button>
-                            ) : (
-                                <Link to="/login" className="block w-full py-4 rounded-xl bg-turismo-navy text-white font-bold text-lg hover:bg-turismo-navy/90 transition shadow-lg shadow-turismo-navy/30 dark:bg-white dark:text-turismo-navy dark:hover:bg-gray-100 text-center">
-                                    Se connecter pour réserver
-                                </Link>
-                            )}
+                            <button
+                                onClick={handleReservation}
+                                className="w-full py-4 rounded-lg bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 transition shadow-lg"
+                            >
+                                Réserver ce véhicule
+                            </button>
                         </div>
                     </div>
                 </div>

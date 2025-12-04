@@ -2,73 +2,40 @@ import { carsData } from '../data/cars';
 
 const STORAGE_KEYS = {
     CARS: 'car_project_cars',
-    RESERVATIONS: 'car_project_reservations',
-    USERS: 'car_project_users',
-    CURRENT_USER: 'car_project_current_user'
+    RESERVATIONS: 'car_project_reservations'
 };
 
 export const storageService = {
-    // Initialize data if empty
+    // Initialise les données si elles n'existent pas
     init() {
         if (!localStorage.getItem(STORAGE_KEYS.CARS)) {
             localStorage.setItem(STORAGE_KEYS.CARS, JSON.stringify(carsData));
-        } else {
-            // Migration: Add coordinates to existing cars if missing
-            const cars = JSON.parse(localStorage.getItem(STORAGE_KEYS.CARS));
-            let updated = false;
-
-            const defaultLocations = [
-                { lat: 48.8566, lng: 2.3522 }, // Paris
-                { lat: 45.7640, lng: 4.8357 }, // Lyon
-                { lat: 43.2965, lng: 5.3698 }, // Marseille
-                { lat: 44.8378, lng: -0.5792 }, // Bordeaux
-                { lat: 43.7102, lng: 7.2620 }, // Nice
-                { lat: 48.5734, lng: 7.7521 }, // Strasbourg
-                { lat: 47.2184, lng: -1.5536 }, // Nantes
-                { lat: 50.6292, lng: 3.0573 }  // Lille
-            ];
-
-            cars.forEach((car, index) => {
-                if (!car.latitude || !car.longitude) {
-                    const loc = defaultLocations[index % defaultLocations.length];
-                    car.latitude = loc.lat;
-                    car.longitude = loc.lng;
-                    updated = true;
-                }
-            });
-
-            if (updated) {
-                localStorage.setItem(STORAGE_KEYS.CARS, JSON.stringify(cars));
-            }
         }
-
         if (!localStorage.getItem(STORAGE_KEYS.RESERVATIONS)) {
             localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify([]));
         }
-        if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
-        }
     },
 
-    // Get all cars
+    // Récupère toutes les voitures
     getCars() {
         this.init();
         const cars = localStorage.getItem(STORAGE_KEYS.CARS);
         return JSON.parse(cars);
     },
 
-    // Get car by ID
+    // Récupère une voiture par son ID
     getCarById(id) {
         const cars = this.getCars();
         return cars.find(car => car.id === parseInt(id));
     },
 
-    // Add a new car
+    // Ajoute une nouvelle voiture
     addCar(car) {
         const cars = this.getCars();
         const newCar = {
             ...car,
-            id: Date.now(), // Simple ID generation
+            id: Date.now(),
+            // On s'assure que specs existe même si vide
             specs: {
                 power: car.power || "N/A",
                 acceleration: car.acceleration || "N/A",
@@ -76,7 +43,8 @@ export const storageService = {
                 seats: car.seats || "2 places",
                 fuel: car.fuel || "Essence"
             },
-            features: car.features ? car.features.split(',').map(f => f.trim()) : []
+            // On transforme la chaine de caractères en tableau
+            features: typeof car.features === 'string' ? car.features.split(',').map(f => f.trim()) : []
         };
 
         cars.push(newCar);
@@ -84,7 +52,7 @@ export const storageService = {
         return newCar;
     },
 
-    // Delete a car
+    // Supprime une voiture
     deleteCar(id) {
         const cars = this.getCars();
         const updatedCars = cars.filter(c => c.id !== id);
@@ -92,148 +60,26 @@ export const storageService = {
         return updatedCars;
     },
 
-    // Update a car
+    // Met à jour une voiture
     updateCar(updatedCar) {
         const cars = this.getCars();
         const index = cars.findIndex(c => c.id === updatedCar.id);
         if (index !== -1) {
-            // Preserve ID and ensure specs/features are correctly formatted if passed
-            const carToSave = {
-                ...cars[index],
-                ...updatedCar,
-                specs: {
-                    ...cars[index].specs,
-                    ...(updatedCar.specs || {})
-                },
-                // Handle features if they are a string (from form) or array (from storage)
-                features: typeof updatedCar.features === 'string'
-                    ? updatedCar.features.split(',').map(f => f.trim())
-                    : (updatedCar.features || cars[index].features)
-            };
-
-            cars[index] = carToSave;
+            cars[index] = { ...cars[index], ...updatedCar };
             localStorage.setItem(STORAGE_KEYS.CARS, JSON.stringify(cars));
-            return carToSave;
         }
-        return null;
     },
 
-    // Add a reservation
+    // Ajoute une réservation simple
     addReservation(reservation) {
         this.init();
         const reservations = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVATIONS));
-        const currentUser = this.getCurrentUser();
-
         const newReservation = {
             ...reservation,
             id: Date.now(),
-            userId: currentUser ? currentUser.id : null, // Associate with user
-            status: 'pending', // Default status: pending, confirmed, refused
-            date: new Date().toISOString()
+            date: new Date().toLocaleDateString()
         };
         reservations.push(newReservation);
         localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify(reservations));
-        return newReservation;
-    },
-
-    // Get all reservations
-    getReservations() {
-        this.init();
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.RESERVATIONS));
-    },
-
-    // Update reservation status
-    updateReservationStatus(id, status) {
-        this.init();
-        const reservations = this.getReservations();
-        const index = reservations.findIndex(r => r.id === id);
-        if (index !== -1) {
-            reservations[index].status = status;
-            localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify(reservations));
-        }
-        return reservations;
-    },
-
-    // Remove a reservation
-    removeReservation(id) {
-        this.init();
-        const reservations = this.getReservations();
-        const updatedReservations = reservations.filter(r => r.id !== id);
-        localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify(updatedReservations));
-        return updatedReservations;
-    },
-
-    // Register a new user
-    registerUser(user) {
-        this.init();
-        const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
-
-        // Check if email already exists
-        if (users.find(u => u.email === user.email)) {
-            throw new Error('Cet email est déjà utilisé');
-        }
-
-        const newUser = {
-            ...user,
-            id: Date.now(),
-            role: 'client' // Default role
-        };
-
-        // If it's the very first user, make them admin for convenience
-        if (users.length === 0) {
-            newUser.role = 'admin';
-        }
-
-        users.push(newUser);
-        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-        return newUser;
-    },
-
-    // Login user
-    loginUser(email, password) {
-        this.init();
-        const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
-        const user = users.find(u => u.email === email && u.password === password);
-
-        if (!user) {
-            throw new Error('Email ou mot de passe incorrect');
-        }
-
-        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
-        return user;
-    },
-
-    // Get all users
-    getUsers() {
-        this.init();
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
-    },
-
-    // Update user
-    updateUser(updatedUser) {
-        this.init();
-        const users = this.getUsers();
-        const index = users.findIndex(u => u.id === updatedUser.id);
-
-        if (index !== -1) {
-            users[index] = updatedUser;
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-
-            // If updating current user, update session too
-            const currentUser = this.getCurrentUser();
-            if (currentUser && currentUser.id === updatedUser.id) {
-                localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updatedUser));
-            }
-        }
-    },
-
-    // Logout
-    logout() {
-        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-    },
-
-    // Get current user
-    getCurrentUser() {
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_USER));
     }
 };

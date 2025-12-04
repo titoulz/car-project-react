@@ -5,20 +5,11 @@ import Navbar from '../components/Navbar';
 
 const AddCar = () => {
     const navigate = useNavigate();
-
     const [cars, setCars] = useState([]);
 
     useEffect(() => {
-        const user = storageService.getCurrentUser();
-        if (!user || user.role !== 'admin') {
-            alert("Accès refusé. Réservé aux administrateurs.");
-            navigate('/');
-            return;
-        }
         setCars(storageService.getCars());
     }, [navigate]);
-
-    const [editingId, setEditingId] = useState(null);
 
     const initialFormState = {
         name: '',
@@ -30,11 +21,8 @@ const AddCar = () => {
         power: '',
         acceleration: '',
         transmission: 'Automatique',
-        seats: '',
         fuel: 'Essence',
-        features: '',
-        latitude: '',
-        longitude: ''
+        features: ''
     };
 
     const [formData, setFormData] = useState(initialFormState);
@@ -49,297 +37,166 @@ const AddCar = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (editingId) {
-            storageService.updateCar({ ...formData, id: editingId });
-            alert('Voiture modifiée avec succès !');
-            setEditingId(null);
-        } else {
-            storageService.addCar(formData);
-            alert('Voiture ajoutée avec succès !');
-        }
-        setCars(storageService.getCars()); // Refresh list
-        setFormData(initialFormState);
-    };
-
-    const handleEdit = (car) => {
-        setEditingId(car.id);
-        setFormData({
-            name: car.name,
-            category: car.category,
-            price: car.price,
-            priceUnit: car.priceUnit || '/jour',
-            image: car.image,
-            description: car.description || '',
-            power: car.specs?.power || '',
-            acceleration: car.specs?.acceleration || '',
-            transmission: car.specs?.transmission || 'Automatique',
-            seats: car.specs?.seats || '',
-            fuel: car.specs?.fuel || 'Essence',
-            features: Array.isArray(car.features) ? car.features.join(', ') : car.features || '',
-            latitude: car.latitude || '',
-            longitude: car.longitude || ''
-        });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleCancelEdit = () => {
-        setEditingId(null);
+        storageService.addCar(formData);
+        alert('Voiture ajoutée avec succès !');
+        setCars(storageService.getCars());
         setFormData(initialFormState);
     };
 
     const handleDelete = (id) => {
-        if (window.confirm('Êtes-vous sûr de vouloir supprimer cette voiture ?')) {
+        if (window.confirm('Supprimer cette voiture ?')) {
             storageService.deleteCar(id);
             setCars(storageService.getCars());
-            if (editingId === id) {
-                handleCancelEdit();
-            }
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
             <Navbar />
             <div className="container mx-auto px-4 py-8 pt-24">
-                <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-turismo-navy to-turismo-gold bg-clip-text text-transparent animate-fade-in-up">
-                    {editingId ? 'Modifier le véhicule' : 'Gestion des Véhicules'}
-                </h1>
+                <h1 className="text-3xl font-bold mb-8 text-center">Ajouter une voiture</h1>
 
-                <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 animate-fade-in-up mb-16">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Basic Info */}
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-semibold text-turismo-gold">Informations Générales</h3>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom du modèle</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    required
-                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Catégorie</label>
-                                <input
-                                    type="text"
-                                    name="category"
-                                    required
-                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                    value={formData.category}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prix</label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        name="price"
-                                        required
-                                        placeholder="ex: 500€"
-                                        className="w-2/3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                        value={formData.price}
-                                        onChange={handleChange}
-                                    />
-                                    <select
-                                        name="priceUnit"
-                                        className="w-1/3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                        value={formData.priceUnit}
-                                        onChange={handleChange}
-                                    >
-                                        <option value="/jour">/jour</option>
-                                        <option value="/mois">/mois</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL de l'image</label>
-                                <input
-                                    type="text"
-                                    name="image"
-                                    required
-                                    placeholder="/assets/..."
-                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                    value={formData.image}
-                                    onChange={handleChange}
-                                />
-                            </div>
+                <form onSubmit={handleSubmit} className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-12">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Nom du modèle</label>
+                            <input
+                                type="text"
+                                name="name"
+                                required
+                                className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600"
+                                value={formData.name}
+                                onChange={handleChange}
+                            />
                         </div>
 
-                        {/* Specs */}
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-semibold text-turismo-gold">Caractéristiques</h3>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Catégorie</label>
+                            <input
+                                type="text"
+                                name="category"
+                                required
+                                className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600"
+                                value={formData.category}
+                                onChange={handleChange}
+                            />
+                        </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Puissance</label>
+                        <div className="flex gap-4">
+                            <div className="flex-1">
+                                <label className="block text-sm font-medium mb-1">Prix</label>
                                 <input
                                     type="text"
-                                    name="power"
-                                    placeholder="ex: 500 ch"
-                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                    value={formData.power}
+                                    name="price"
+                                    required
+                                    placeholder="ex: 500€"
+                                    className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600"
+                                    value={formData.price}
                                     onChange={handleChange}
                                 />
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Accélération (0-100)</label>
-                                <input
-                                    type="text"
-                                    name="acceleration"
-                                    placeholder="ex: 3.5s"
-                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                    value={formData.acceleration}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transmission</label>
+                            <div className="w-1/3">
+                                <label className="block text-sm font-medium mb-1">Unité</label>
                                 <select
-                                    name="transmission"
-                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                    value={formData.transmission}
+                                    name="priceUnit"
+                                    className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600"
+                                    value={formData.priceUnit}
                                     onChange={handleChange}
                                 >
-                                    <option value="Automatique">Automatique</option>
-                                    <option value="Manuelle">Manuelle</option>
+                                    <option value="/jour">/jour</option>
+                                    <option value="/mois">/mois</option>
                                 </select>
                             </div>
                         </div>
 
-                        {/* Location */}
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-semibold text-turismo-gold">Localisation (Coordonnées)</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitude</label>
-                                    <input
-                                        type="text"
-                                        name="latitude"
-                                        placeholder="ex: 48.8566"
-                                        className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                        value={formData.latitude || ''}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitude</label>
-                                    <input
-                                        type="text"
-                                        name="longitude"
-                                        placeholder="ex: 2.3522"
-                                        className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                        value={formData.longitude || ''}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                            <label className="block text-sm font-medium mb-1">URL de l'image</label>
+                            <input
+                                type="text"
+                                name="image"
+                                required
+                                placeholder="/assets/..."
+                                className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600"
+                                value={formData.image}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Description</label>
                             <textarea
                                 name="description"
                                 rows="3"
-                                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
+                                className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600"
                                 value={formData.description}
                                 onChange={handleChange}
                             ></textarea>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Équipements (séparés par des virgules)</label>
-                            <input
-                                type="text"
-                                name="features"
-                                placeholder="GPS, Cuir, Toit ouvrant..."
-                                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
-                                value={formData.features}
-                                onChange={handleChange}
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Puissance</label>
+                                <input
+                                    type="text"
+                                    name="power"
+                                    className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600"
+                                    value={formData.power}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Accélération</label>
+                                <input
+                                    type="text"
+                                    name="acceleration"
+                                    className="w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600"
+                                    value={formData.acceleration}
+                                    onChange={handleChange}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="flex gap-4 mt-8">
-                        {editingId && (
-                            <button
-                                type="button"
-                                onClick={handleCancelEdit}
-                                className="w-1/3 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
-                            >
-                                Annuler
-                            </button>
-                        )}
                         <button
                             type="submit"
-                            className={`flex-1 bg-gradient-to-r from-turismo-navy to-turismo-gold hover:from-turismo-navy/90 hover:to-turismo-gold/90 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg`}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition-colors"
                         >
-                            {editingId ? 'Modifier le véhicule' : 'Ajouter la voiture'}
+                            Ajouter la voiture
                         </button>
                     </div>
                 </form>
 
-                {/* Car List Section */}
                 <div className="max-w-4xl mx-auto">
-                    <h2 className="text-3xl font-bold mb-6 text-center text-turismo-navy dark:text-white">Gestion du Catalogue</h2>
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 dark:bg-gray-700/50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Image</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Modèle</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Catégorie</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Prix</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">Actions</th>
+                    <h2 className="text-2xl font-bold mb-6 text-center">Liste des voitures</h2>
+                    <div className="bg-white dark:bg-gray-800 rounded shadow overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-100 dark:bg-gray-700">
+                                <tr>
+                                    <th className="px-4 py-3">Image</th>
+                                    <th className="px-4 py-3">Modèle</th>
+                                    <th className="px-4 py-3">Prix</th>
+                                    <th className="px-4 py-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                {cars.map((car) => (
+                                    <tr key={car.id}>
+                                        <td className="px-4 py-3">
+                                            <img src={car.image} alt={car.name} className="w-12 h-8 object-contain" />
+                                        </td>
+                                        <td className="px-4 py-3 font-medium">{car.name}</td>
+                                        <td className="px-4 py-3">{car.price}</td>
+                                        <td className="px-4 py-3">
+                                            <button
+                                                onClick={() => handleDelete(car.id)}
+                                                className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                    {cars.map((car) => (
-                                        <tr key={car.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <img src={car.image} alt={car.name} className="w-16 h-10 object-contain" />
-                                            </td>
-                                            <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
-                                                {car.name}
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
-                                                {car.category}
-                                            </td>
-                                            <td className="px-6 py-4 text-turismo-navy dark:text-turismo-gold font-bold">
-                                                {car.price}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex gap-3">
-                                                    <button
-                                                        onClick={() => handleEdit(car)}
-                                                        className="text-turismo-navy dark:text-turismo-gold hover:underline font-medium transition-colors"
-                                                    >
-                                                        Modifier
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(car.id)}
-                                                        className="text-red-500 hover:text-red-700 font-medium hover:underline transition-colors"
-                                                    >
-                                                        Supprimer
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
