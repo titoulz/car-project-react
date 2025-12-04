@@ -12,7 +12,36 @@ export const storageService = {
     init() {
         if (!localStorage.getItem(STORAGE_KEYS.CARS)) {
             localStorage.setItem(STORAGE_KEYS.CARS, JSON.stringify(carsData));
+        } else {
+            // Migration: Add coordinates to existing cars if missing
+            const cars = JSON.parse(localStorage.getItem(STORAGE_KEYS.CARS));
+            let updated = false;
+
+            const defaultLocations = [
+                { lat: 48.8566, lng: 2.3522 }, // Paris
+                { lat: 45.7640, lng: 4.8357 }, // Lyon
+                { lat: 43.2965, lng: 5.3698 }, // Marseille
+                { lat: 44.8378, lng: -0.5792 }, // Bordeaux
+                { lat: 43.7102, lng: 7.2620 }, // Nice
+                { lat: 48.5734, lng: 7.7521 }, // Strasbourg
+                { lat: 47.2184, lng: -1.5536 }, // Nantes
+                { lat: 50.6292, lng: 3.0573 }  // Lille
+            ];
+
+            cars.forEach((car, index) => {
+                if (!car.latitude || !car.longitude) {
+                    const loc = defaultLocations[index % defaultLocations.length];
+                    car.latitude = loc.lat;
+                    car.longitude = loc.lng;
+                    updated = true;
+                }
+            });
+
+            if (updated) {
+                localStorage.setItem(STORAGE_KEYS.CARS, JSON.stringify(cars));
+            }
         }
+
         if (!localStorage.getItem(STORAGE_KEYS.RESERVATIONS)) {
             localStorage.setItem(STORAGE_KEYS.RESERVATIONS, JSON.stringify([]));
         }
@@ -61,6 +90,32 @@ export const storageService = {
         const updatedCars = cars.filter(c => c.id !== id);
         localStorage.setItem(STORAGE_KEYS.CARS, JSON.stringify(updatedCars));
         return updatedCars;
+    },
+
+    // Update a car
+    updateCar(updatedCar) {
+        const cars = this.getCars();
+        const index = cars.findIndex(c => c.id === updatedCar.id);
+        if (index !== -1) {
+            // Preserve ID and ensure specs/features are correctly formatted if passed
+            const carToSave = {
+                ...cars[index],
+                ...updatedCar,
+                specs: {
+                    ...cars[index].specs,
+                    ...(updatedCar.specs || {})
+                },
+                // Handle features if they are a string (from form) or array (from storage)
+                features: typeof updatedCar.features === 'string'
+                    ? updatedCar.features.split(',').map(f => f.trim())
+                    : (updatedCar.features || cars[index].features)
+            };
+
+            cars[index] = carToSave;
+            localStorage.setItem(STORAGE_KEYS.CARS, JSON.stringify(cars));
+            return carToSave;
+        }
+        return null;
     },
 
     // Add a reservation

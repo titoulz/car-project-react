@@ -18,7 +18,9 @@ const AddCar = () => {
         setCars(storageService.getCars());
     }, [navigate]);
 
-    const [formData, setFormData] = useState({
+    const [editingId, setEditingId] = useState(null);
+
+    const initialFormState = {
         name: '',
         category: '',
         price: '',
@@ -30,8 +32,12 @@ const AddCar = () => {
         transmission: 'Automatique',
         seats: '',
         fuel: 'Essence',
-        features: ''
-    });
+        features: '',
+        latitude: '',
+        longitude: ''
+    };
+
+    const [formData, setFormData] = useState(initialFormState);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -43,30 +49,51 @@ const AddCar = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        storageService.addCar(formData);
-        alert('Voiture ajoutée avec succès !');
+        if (editingId) {
+            storageService.updateCar({ ...formData, id: editingId });
+            alert('Voiture modifiée avec succès !');
+            setEditingId(null);
+        } else {
+            storageService.addCar(formData);
+            alert('Voiture ajoutée avec succès !');
+        }
         setCars(storageService.getCars()); // Refresh list
-        // Reset form
+        setFormData(initialFormState);
+    };
+
+    const handleEdit = (car) => {
+        setEditingId(car.id);
         setFormData({
-            name: '',
-            category: '',
-            price: '',
-            priceUnit: '/jour',
-            image: '',
-            description: '',
-            power: '',
-            acceleration: '',
-            transmission: 'Automatique',
-            seats: '',
-            fuel: 'Essence',
-            features: ''
+            name: car.name,
+            category: car.category,
+            price: car.price,
+            priceUnit: car.priceUnit || '/jour',
+            image: car.image,
+            description: car.description || '',
+            power: car.specs?.power || '',
+            acceleration: car.specs?.acceleration || '',
+            transmission: car.specs?.transmission || 'Automatique',
+            seats: car.specs?.seats || '',
+            fuel: car.specs?.fuel || 'Essence',
+            features: Array.isArray(car.features) ? car.features.join(', ') : car.features || '',
+            latitude: car.latitude || '',
+            longitude: car.longitude || ''
         });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setFormData(initialFormState);
     };
 
     const handleDelete = (id) => {
         if (window.confirm('Êtes-vous sûr de vouloir supprimer cette voiture ?')) {
             storageService.deleteCar(id);
             setCars(storageService.getCars());
+            if (editingId === id) {
+                handleCancelEdit();
+            }
         }
     };
 
@@ -75,7 +102,7 @@ const AddCar = () => {
             <Navbar />
             <div className="container mx-auto px-4 py-8 pt-24">
                 <h1 className="text-4xl font-bold mb-8 text-center bg-gradient-to-r from-turismo-navy to-turismo-gold bg-clip-text text-transparent animate-fade-in-up">
-                    Gestion des Véhicules
+                    {editingId ? 'Modifier le véhicule' : 'Gestion des Véhicules'}
                 </h1>
 
                 <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 animate-fade-in-up mb-16">
@@ -187,6 +214,35 @@ const AddCar = () => {
                                 </select>
                             </div>
                         </div>
+
+                        {/* Location */}
+                        <div className="space-y-4">
+                            <h3 className="text-xl font-semibold text-turismo-gold">Localisation (Coordonnées)</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitude</label>
+                                    <input
+                                        type="text"
+                                        name="latitude"
+                                        placeholder="ex: 48.8566"
+                                        className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
+                                        value={formData.latitude || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitude</label>
+                                    <input
+                                        type="text"
+                                        name="longitude"
+                                        placeholder="ex: 2.3522"
+                                        className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-turismo-navy dark:focus:border-turismo-gold transition-colors text-gray-900 dark:text-white"
+                                        value={formData.longitude || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="mt-6 space-y-4">
@@ -214,12 +270,23 @@ const AddCar = () => {
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="w-full mt-8 bg-gradient-to-r from-turismo-navy to-turismo-gold hover:from-turismo-navy/90 hover:to-turismo-gold/90 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
-                    >
-                        Ajouter la voiture
-                    </button>
+                    <div className="flex gap-4 mt-8">
+                        {editingId && (
+                            <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                className="w-1/3 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-all"
+                            >
+                                Annuler
+                            </button>
+                        )}
+                        <button
+                            type="submit"
+                            className={`flex-1 bg-gradient-to-r from-turismo-navy to-turismo-gold hover:from-turismo-navy/90 hover:to-turismo-gold/90 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg`}
+                        >
+                            {editingId ? 'Modifier le véhicule' : 'Ajouter la voiture'}
+                        </button>
+                    </div>
                 </form>
 
                 {/* Car List Section */}
@@ -253,12 +320,20 @@ const AddCar = () => {
                                                 {car.price}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <button
-                                                    onClick={() => handleDelete(car.id)}
-                                                    className="text-red-500 hover:text-red-700 font-medium hover:underline transition-colors"
-                                                >
-                                                    Supprimer
-                                                </button>
+                                                <div className="flex gap-3">
+                                                    <button
+                                                        onClick={() => handleEdit(car)}
+                                                        className="text-turismo-navy dark:text-turismo-gold hover:underline font-medium transition-colors"
+                                                    >
+                                                        Modifier
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(car.id)}
+                                                        className="text-red-500 hover:text-red-700 font-medium hover:underline transition-colors"
+                                                    >
+                                                        Supprimer
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

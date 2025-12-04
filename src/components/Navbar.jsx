@@ -65,6 +65,7 @@ export default function Navbar() {
                             <Link to="/add-car" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Gérer les véhicules</Link>
                             <Link to="/manage-users" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Utilisateurs</Link>
                             <Link to="/admin/reservations" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Réservations</Link>
+                            <Link to="/admin/map" className="text-gray-600 hover:text-turismo-gold transition dark:text-gray-300 dark:hover:text-turismo-gold">Carte</Link>
                         </>
                     )}
 

@@ -10,6 +10,7 @@ import Register from '../pages/Register';
 import ManageUsers from '../pages/ManageUsers';
 import AdminReservations from '../pages/AdminReservations';
 import MyAccount from '../pages/MyAccount';
+import AdminMap from '../pages/AdminMap';
 
 export const router = createBrowserRouter([
     {
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
             {
                 path: '/admin/reservations',
                 element: <AdminReservations />,
+            },
+            {
+                path: '/admin/map',
+                element: <AdminMap />,
             },
             {
                 path: '/login',
